@@ -89,6 +89,8 @@ defmodule EctoPollQueueExampleTest do
         id
       end)
 
+    Process.sleep(5000)
+
     Enum.each(ids, fn id ->
       assert_receive({:classify_job_ran, ^id}, 200)
     end)

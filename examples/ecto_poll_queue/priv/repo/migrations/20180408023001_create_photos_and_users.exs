@@ -6,6 +6,7 @@ defmodule EctoPollQueueExample.Repo.Migrations.CreatePhotosAndUsers do
   alias Honeydew.EctoSource.ErlangTerm
 
   def change do
+    execute("CREATE EXTENSION IF NOT EXISTS pgcrypto;", "SELECT NULL;")
     create table(:photos, primary_key: false) do
       add :id, :uuid, primary_key: true, default: fragment("gen_random_uuid()")
 

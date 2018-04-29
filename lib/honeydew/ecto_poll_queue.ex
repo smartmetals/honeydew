@@ -90,7 +90,7 @@ defmodule Honeydew.EctoPollQueue do
 
         unquote(queue)
         |> Honeydew.EctoSource.field_name(:lock)
-        |> Ecto.Migration.add(:bigint, default: SQL.ready_fragment())
+        |> Ecto.Migration.add(:bigint, default: 0)
 
         unquote(queue)
         |> Honeydew.EctoSource.field_name(:private)

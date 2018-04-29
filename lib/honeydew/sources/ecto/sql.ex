@@ -40,12 +40,18 @@ defmodule Honeydew.EctoSource.SQL do
 
   @spec reserve_sql(State.t()) :: String.t()
   def reserve_sql(state) do
-    "UPDATE #{state.table}
+    "WITH next as (
+       SELECT #{state.key_field}
+       FROM #{state.table}
+       WHERE #{state.lock_field} BETWEEN 0 AND #{msecs_ago_sql(state.stale_timeout)}
+       ORDER BY #{state.lock_field}, #{state.key_field}
+       LIMIT 1
+    )
+    UPDATE #{state.table}
     SET #{state.lock_field} = #{now_msecs_sql()}
-    WHERE #{state.lock_field} BETWEEN 0 AND #{msecs_ago_sql(state.stale_timeout)}
-    ORDER BY #{state.lock_field}, #{state.key_field}
-    LIMIT 1
-    RETURNING #{state.key_field}, #{state.private_field}"
+    FROM next
+    WHERE #{state.table}.#{state.key_field} = next.#{state.key_field}
+    RETURNING next.#{state.key_field}, #{state.private_field}"
   end
 
   @spec cancel_sql(State.t()) :: String.t()
@@ -53,9 +59,8 @@ defmodule Honeydew.EctoSource.SQL do
     "UPDATE #{state.table}
     SET #{state.lock_field} = NULL
     WHERE
-      id = $1
+      #{state.key_field} = $1
       AND #{state.lock_field} BETWEEN 0 AND #{msecs_ago_sql(state.stale_timeout)}
-    LIMIT 1
     RETURNING #{state.lock_field}"
   end
 end
